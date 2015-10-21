@@ -17,8 +17,8 @@ void check(T err, const char* const func, const char* const file, const int line
 }
 
 
-__global__ void calculateSum(int &N, float *deviceA, float *deviceF, float *deviceX0, float *deviceX1) {
-	unsigned int i = threadIdx.x + blockIdx.x * blockDim.x;
+__global__ void calculateSum(int N, float *deviceA, float *deviceF, float *deviceX0, float *deviceX1) {
+	unsigned int i = threadIdx.x + blockIdx.x * blockDim.x;	
 	float sum = 0.0f;
 	for (int j = 0; j < N; ++j) {
 		sum += deviceA[j + i * N] * deviceX0[j];
@@ -82,9 +82,6 @@ int main() {
 
 	unsigned int mem_sizeA = sizeof(float)*size;
 	unsigned int mem_sizeX = sizeof(float)*(N);
-
-
-
 
 	hA = (float*)malloc(mem_sizeA);
 	AT = (float*)malloc(mem_sizeA);
@@ -157,8 +154,8 @@ int main() {
 	}
 	checkCudaErrors(cudaMemcpy(deviceX0, hX0, mem_sizeX, cudaMemcpyHostToDevice));
 
-	dim3 threads(512);
-	dim3 blocks(size / threads.x);
+	dim3 threads(32);
+	dim3 blocks(N / threads.x);
 
 	// GPU BEGIN
 	cudaEventRecord(GPUStart, 0);
@@ -172,7 +169,6 @@ int main() {
 		checkCudaErrors(cudaMemcpy(hostDifference, deviceDifference, mem_sizeX, cudaMemcpyDeviceToHost));
 		eps = 0.0f;
 		for (j = 0; j < N; ++j) {
-			printf("%f\n", hostDifference[j]);
 			eps += hostDifference[j];
 		}
 		eps /= N;
